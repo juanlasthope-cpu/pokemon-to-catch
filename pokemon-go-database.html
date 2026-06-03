@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pokémon GO Database</title>
+
+  <!-- ============================================================
+    FONTS
+    Change the font by swapping out the Google Fonts link and
+    updating the font-family in the body rule below.
+    Browse fonts at: https://fonts.google.com
+  ============================================================ -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+
+    /* ============================================================
+      GLOBAL COLORS — change these to retheme the whole site
+      Just swap the hex values to any color you like.
+      Use https://coolors.co to find nice palettes.
+    ============================================================ */
+    :root {
+      --bg-page:        #f5f5f0;      /* ← page background */
+      --bg-card:        #ffffff;      /* ← card/panel background */
+      --bg-hover:       #f0f0ea;      /* ← card hover background */
+      --bg-input:       #ffffff;      /* ← search bar background */
+      --bg-secondary:   #f0f0ea;      /* ← muted backgrounds (notes box, etc.) */
+
+      --text-primary:   #1a1a18;      /* ← main text color */
+      --text-secondary: #6b6b63;      /* ← muted/label text */
+      --text-tertiary:  #9e9e96;      /* ← very muted text (dex numbers, hints) */
+
+      --border:         rgba(0,0,0,0.1);   /* ← card/input borders */
+      --border-strong:  rgba(0,0,0,0.2);   /* ← focused input border */
+
+      --star-filled:    #E9B934;      /* ← filled star color */
+      --star-border:    #C99A20;      /* ← filled star border */
+
+      --accent:         #3d6b4f;      /* ← accent color (add button hover, etc.) */
+    }
+
+    /* ============================================================
+      BASE / RESET
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;  /* ← change font here */
+      font-size: 16px;
+      line-height: 1.6;
+      background: var(--bg-page);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+
+    /* ============================================================
+      LAYOUT WRAPPER
+      Controls max width and centering of all content.
+      Change max-width to make the site wider or narrower.
+    ============================================================ */
+    .container {
+      max-width: 720px;       /* ← site max width */
+      margin: 0 auto;
+      padding: 2rem 1.25rem;
+    }
+
+    /* ============================================================
+      HEADER
+    ============================================================ */
+    .header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .header-icon {
+      font-size: 36px;        /* ← icon/emoji size */
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .header h1 {
+      font-size: 28px;        /* ← site title size */
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.5px;
+    }
+
+    .header p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 6px;
+    }
+
+    /* ============================================================
+      SEARCH BAR
+    ============================================================ */
+    .search-wrap {
+      position: relative;
+      max-width: 500px;
+      margin: 0 auto 1.5rem;
+    }
+
+    .search-wrap input {
+      width: 100%;
+      padding: 12px 16px 12px 44px;
+      font-size: 15px;
+      font-family: inherit;
+      border: 1.5px solid var(--border-strong);
+      border-radius: 12px;    /* ← search bar corner roundness */
+      background: var(--bg-input);
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .search-wrap input:focus {
+      border-color: var(--accent);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-tertiary);
+      font-size: 18px;
+      pointer-events: none;
+    }
+
+    /* ============================================================
+      RESULTS COUNT LABEL
+    ============================================================ */
+    .results-label {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    /* ============================================================
+      POKÉMON CARD GRID
+      Change minmax(140px, 1fr) to make cards wider or narrower.
+      e.g. minmax(180px, 1fr) = fewer, wider cards
+           minmax(110px, 1fr) = more, narrower cards
+    ============================================================ */
+    .pokemon-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 1.5rem;
+    }
+
+    /* ============================================================
+      INDIVIDUAL POKÉMON CARD
+    ============================================================ */
+    .pokemon-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;    /* ← card corner roundness */
+      padding: 1rem;
+      cursor: pointer;
+      text-align: center;
+      transition: border-color 0.15s, background 0.15s, transform 0.1s;
+    }
+
+    .pokemon-card:hover {
+      background: var(--bg-hover);
+      border-color: var(--border-strong);
+      transform: translateY(-2px);  /* ← remove this line to disable the lift effect */
+    }
+
+    .pokemon-card .dex-num {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-bottom: 4px;
+    }
+
+    .pokemon-card .poke-name {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .pokemon-card .type-badges {
+      display: flex;
+      gap: 4px;
+      justify-content: center;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* ============================================================
+      TYPE BADGES
+      Each type has its own color. Change the background/color
+      values below to restyle any type badge.
+    ============================================================ */
+    .type-badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-weight: 500;
+      text-transform: capitalize;
+    }
+
+    .type-normal   { background: #F5F5F5; color: #424242; }
+    .type-fire     { background: #FDEBD0; color: #8B3A00; }
+    .type-water    { background: #DBEEF8; color: #1A5F7A; }
+    .type-grass    { background: #D5EDD5; color: #2A5E2A; }
+    .type-electric { background: #FEF9C3; color: #7A5B00; }
+    .type-ice      { background: #E0F7FA; color: #00546B; }
+    .type-fighting { background: #FFEBEE; color: #7A0000; }
+    .type-poison   { background: #F3E5F5; color: #4A148C; }
+    .type-ground   { background: #FFF3E0; color: #6D4C00; }
+    .type-flying   { background: #E8EAF6; color: #1A237E; }
+    .type-psychic  { background: #FCE4EC; color: #8B0040; }
+    .type-bug      { background: #F9FBE7; color: #4C5900; }
+    .type-rock     { background: #EFEBE9; color: #4E342E; }
+    .type-ghost    { background: #EDE7F6; color: #311B92; }
+    .type-dragon   { background: #E8EAF6; color: #1A237E; }
+    .type-dark     { background: #ECEFF1; color: #263238; }
+    .type-steel    { background: #ECEFF1; color: #37474F; }
+    .type-fairy    { background: #FCE4EC; color: #880E4F; }
+
+    /* ============================================================
+      ADD POKÉMON BUTTON
+    ============================================================ */
+    .add-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .add-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .no-results {
+      text-align: center;
+      color: var(--text-secondary);
+      padding: 2rem 0;
+      font-size: 14px;
+      grid-column: 1 / -1;
+    }
+
+    /* ============================================================
+      DETAIL PAGE — BACK BUTTON
+    ============================================================ */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 4px 0;
+      margin-bottom: 1.5rem;
+      background: none;
+      border: none;
+      font-family: inherit;
+      transition: color 0.15s;
+    }
+
+    .back-btn:hover { color: var(--text-primary); }
+
+    /* ============================================================
+      DETAIL PAGE — POKÉMON HEADER
+    ============================================================ */
+    .detail-name {
+      font-size: 28px;        /* ← Pokémon name size on detail page */
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .detail-dex {
+      font-size: 13px;
+      color: var(--text-tertiary);
+      margin-top: 2px;
+    }
+
+    .detail-types {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    /* ============================================================
+      SECTION LABELS (small uppercase labels above sections)
+    ============================================================ */
+    .section-label {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 12px;
+      margin-top: 1.75rem;
+    }
+
+    /* ============================================================
+      RATINGS — FORMAT ROWS
+    ============================================================ */
+    .rating-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .rating-format {
+      font-size: 14px;
+      color: var(--text-secondary);
+      width: 150px;
+      flex-shrink: 0;
+    }
+
+    .rating-stars { display: flex; gap: 4px; }
+
+    /* ============================================================
+      STARS
+      Change --star-filled in :root above to change star color.
+    ============================================================ */
+    .star {
+      width: 22px;
+      height: 22px;
+      border-radius: 4px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.1s, transform 0.1s;
+      user-select: none;
+    }
+
+    .star:hover { transform: scale(1.15); }
+
+    .star.filled {
+      background: var(--star-filled);
+      border-color: var(--star-border);
+    }
+
+    .rating-label {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      min-width: 70px;
+    }
+
+    /* ============================================================
+      NOTES BOX (display)
+    ============================================================ */
+    .notes-box {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 14px;
+      color: var(--text-primary);
+      line-height: 1.7;
+      min-height: 80px;
+      white-space: pre-wrap;
+    }
+
+    .notes-empty {
+      color: var(--text-tertiary);
+      font-style: italic;
+    }
+
+    /* ============================================================
+      EDIT NOTES SECTION
+    ============================================================ */
+    .edit-section {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .edit-section textarea {
+      width: 100%;
+      min-height: 90px;
+      font-size: 14px;
+      font-family: inherit;
+      padding: 10px 12px;
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      background: var(--bg-input);
+      color: var(--text-primary);
+      resize: vertical;
+      margin-bottom: 10px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .edit-section textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .save-btn {
+      padding: 9px 20px;
+      font-size: 14px;
+      font-family: inherit;
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .save-btn:hover { background: var(--bg-hover); }
+
+    /* ============================================================
+      DELETE BUTTON (on detail page)
+    ============================================================ */
+    .delete-btn {
+      padding: 9px 20px;
+      font-size: 14px;
+      font-family: inherit;
+      border: 1px solid #f5c2c2;
+      border-radius: 10px;
+      background: transparent;
+      color: #c0392b;
+      cursor: pointer;
+      margin-left: 8px;
+      transition: background 0.15s;
+    }
+
+    .delete-btn:hover { background: #fff0f0; }
+
+    /* ============================================================
+      ADD POKÉMON MODAL
+    ============================================================ */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 1rem;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;    /* ← modal corner roundness */
+      padding: 1.75rem;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .modal h3 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+      color: var(--text-primary);
+    }
+
+    .modal label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      display: block;
+      margin-bottom: 4px;
+      margin-top: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .modal input,
+    .modal select {
+      width: 100%;
+      padding: 9px 12px;
+      font-size: 14px;
+      font-family: inherit;
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      background: var(--bg-input);
+      color: var(--text-primary);
+      outline: none;
+    }
+
+    .modal input:focus,
+    .modal select:focus {
+      border-color: var(--accent);
+    }
+
+    .modal-btns {
+      display: flex;
+      gap: 8px;
+      margin-top: 1.5rem;
+      justify-content: flex-end;
+    }
+
+    .modal-btns button {
+      padding: 9px 18px;
+      font-size: 14px;
+      font-family: inherit;
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .modal-btns button:hover { background: var(--bg-hover); }
+
+    .modal-btns button.primary {
+      background: var(--accent);   /* ← "Add" button color — change --accent in :root */
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .modal-btns button.primary:hover { opacity: 0.88; }
+
+    /* ============================================================
+      VIEWS (home vs detail)
+      Don't touch these — they control page navigation.
+    ============================================================ */
+    .home-view, .detail-view { display: none; }
+    .home-view.active, .detail-view.active { display: block; }
+
+  </style>
+</head>
+<body>
+
+<div class="container" id="root">
+
+  <!-- ============================================================
+    HOME VIEW — main search page
+  ============================================================ -->
+  <div class="home-view active" id="home-view">
+
+    <div class="header">
+      <span class="header-icon">⚪</span>  <!-- ← swap this emoji for any icon -->
+      <h1>Pokémon GO Database</h1>          <!-- ← change the site title here -->
+      <p>Track which Pokémon are useful and why</p>  <!-- ← subtitle -->
+    </div>
+
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search-input" placeholder="Search Pokémon..." autocomplete="off" />
+    </div>
+
+    <div class="results-label" id="results-label"></div>
+
+    <div class="pokemon-grid" id="pokemon-grid"></div>
+
+    <div style="text-align: center; margin-top: 1rem;">
+      <button class="add-btn" id="open-add-btn">+ Add Pokémon</button>
+    </div>
+
+  </div>
+
+  <!-- ============================================================
+    DETAIL VIEW — individual Pokémon page
+  ============================================================ -->
+  <div class="detail-view" id="detail-view">
+
+    <button class="back-btn" id="back-btn">← All Pokémon</button>
+
+    <div class="detail-name" id="d-name"></div>
+    <div class="detail-dex" id="d-dex"></div>
+    <div class="detail-types" id="d-types"></div>
+
+    <div class="section-label">Ratings by format</div>
+    <div id="ratings-container"></div>
+
+    <div class="section-label">Notes</div>
+    <div class="notes-box" id="d-notes"></div>
+
+    <div class="edit-section">
+      <div class="section-label" style="margin-top: 0;">Edit notes</div>
+      <textarea id="notes-editor" placeholder="Add notes about movesets, specific counters, tips..."></textarea>
+      <button class="save-btn" id="save-notes-btn">Save notes</button>
+      <button class="delete-btn" id="delete-btn">Delete Pokémon</button>
+    </div>
+
+  </div>
+
+  <!-- ============================================================
+    ADD POKÉMON MODAL
+  ============================================================ -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <h3>Add Pokémon</h3>
+
+      <label>Name</label>
+      <input type="text" id="m-name" placeholder="e.g. Mewtwo" />
+
+      <label>Pokédex #</label>
+      <input type="number" id="m-dex" placeholder="e.g. 150" />
+
+      <label>Primary type</label>
+      <select id="m-type1">
+        <option value="normal">Normal</option>
+        <option value="fire">Fire</option>
+        <option value="water">Water</option>
+        <option value="grass">Grass</option>
+        <option value="electric">Electric</option>
+        <option value="ice">Ice</option>
+        <option value="fighting">Fighting</option>
+        <option value="poison">Poison</option>
+        <option value="ground">Ground</option>
+        <option value="flying">Flying</option>
+        <option value="psychic">Psychic</option>
+        <option value="bug">Bug</option>
+        <option value="rock">Rock</option>
+        <option value="ghost">Ghost</option>
+        <option value="dragon">Dragon</option>
+        <option value="dark">Dark</option>
+        <option value="steel">Steel</option>
+        <option value="fairy">Fairy</option>
+      </select>
+
+      <label>Secondary type (optional)</label>
+      <select id="m-type2">
+        <option value="">None</option>
+        <option value="normal">Normal</option>
+        <option value="fire">Fire</option>
+        <option value="water">Water</option>
+        <option value="grass">Grass</option>
+        <option value="electric">Electric</option>
+        <option value="ice">Ice</option>
+        <option value="fighting">Fighting</option>
+        <option value="poison">Poison</option>
+        <option value="ground">Ground</option>
+        <option value="flying">Flying</option>
+        <option value="psychic">Psychic</option>
+        <option value="bug">Bug</option>
+        <option value="rock">Rock</option>
+        <option value="ghost">Ghost</option>
+        <option value="dragon">Dragon</option>
+        <option value="dark">Dark</option>
+        <option value="steel">Steel</option>
+        <option value="fairy">Fairy</option>
+      </select>
+
+      <div class="modal-btns">
+        <button id="cancel-add-btn">Cancel</button>
+        <button class="primary" id="confirm-add-btn">Add</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end .container -->
+
+<!-- ============================================================
+  JAVASCRIPT — data and interactions
+  The data lives in localStorage so it persists across visits.
+  You can add starter Pokémon to the DEFAULT_DB array below.
+============================================================ -->
+<script>
+
+  /* ---- FORMATS — add or remove formats here ---- */
+  const FORMATS = ['Raids', 'Great League', 'Ultra League', 'Master League', 'Gym Battles'];
+
+  /* ---- RATING LABELS — one per star level (index = star count) ---- */
+  const RATING_LABELS = ['', 'Poor', 'Below avg', 'Average', 'Good', 'Excellent'];
+
+  /* ---- STARTER DATA — edit or add to this to pre-populate the database ---- */
+  const DEFAULT_DB = [
+    {
+      id: 1,
+      name: 'Mewtwo',
+      dex: 150,
+      types: ['psychic'],
+      ratings: { 'Raids': 5, 'Great League': 1, 'Ultra League': 2, 'Master League': 5, 'Gym Battles': 4 },
+      notes: 'Best psychic attacker in the game. Shadow Mewtwo is even stronger for raids. Psystrike is the preferred charge move.'
+    },
+    {
+      id: 2,
+      name: 'Garchomp',
+      dex: 445,
+      types: ['dragon', 'ground'],
+      ratings: { 'Raids': 4, 'Great League': 1, 'Ultra League': 2, 'Master League': 5, 'Gym Battles': 4 },
+      notes: 'Top tier Master League pick and great ground/dragon attacker for raids. Mud Shot + Earth Power is the go-to moveset.'
+    },
+    {
+      id: 3,
+      name: 'Medicham',
+      dex: 308,
+      types: ['fighting', 'psychic'],
+      ratings: { 'Raids': 2, 'Great League': 5, 'Ultra League': 1, 'Master League': 1, 'Gym Battles': 2 },
+      notes: 'Absolute Great League monster. Counter + Ice Punch/Dynamic Punch. One of the most consistent picks in GL.'
+    },
+  ];
+
+  /* ---- Load data from localStorage (or use defaults on first visit) ---- */
+  let db, nextId;
+
+  function loadData() {
+    try {
+      const saved = localStorage.getItem('pokemon-go-db');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        db = parsed.db;
+        nextId = parsed.nextId;
+      } else {
+        db = DEFAULT_DB;
+        nextId = DEFAULT_DB.length + 1;
+      }
+    } catch(e) {
+      db = DEFAULT_DB;
+      nextId = DEFAULT_DB.length + 1;
+    }
+  }
+
+  function saveData() {
+    localStorage.setItem('pokemon-go-db', JSON.stringify({ db, nextId }));
+  }
+
+  /* ---- Type badge HTML ---- */
+  function typeBadge(type) {
+    return `<span class="type-badge type-${type}">${type}</span>`;
+  }
+
+  /* ---- Render the home grid ---- */
+  function renderHome(filter = '') {
+    const grid = document.getElementById('pokemon-grid');
+    const label = document.getElementById('results-label');
+    const filtered = filter
+      ? db.filter(p => p.name.toLowerCase().includes(filter.toLowerCase()))
+      : db;
+
+    label.textContent = db.length > 0 ? `${filtered.length} of ${db.length} Pokémon` : '';
+
+    if (filtered.length === 0) {
+      grid.innerHTML = `<div class="no-results">No Pokémon found${filter ? ` for "${filter}"` : ''}.</div>`;
+      return;
+    }
+
+    grid.innerHTML = filtered.map(p => `
+      <div class="pokemon-card" data-id="${p.id}">
+        <div class="dex-num">#${String(p.dex).padStart(3,'0')}</div>
+        <div class="poke-name">${p.name}</div>
+        <div class="type-badges">${p.types.map(typeBadge).join('')}</div>
+      </div>
+    `).join('');
+
+    grid.querySelectorAll('.pokemon-card').forEach(card => {
+      card.addEventListener('click', () => openDetail(parseInt(card.dataset.id)));
+    });
+  }
+
+  /* ---- Open a Pokémon's detail page ---- */
+  let currentId = null;
+
+  function openDetail(id) {
+    currentId = id;
+    const p = db.find(x => x.id === id);
+    document.getElementById('home-view').classList.remove('active');
+    document.getElementById('detail-view').classList.add('active');
+    document.getElementById('d-name').textContent = p.name;
+    document.getElementById('d-dex').textContent = `#${String(p.dex).padStart(3,'0')}`;
+    document.getElementById('d-types').innerHTML = p.types.map(typeBadge).join('');
+    renderRatings(p);
+    renderNotes(p);
+    document.getElementById('notes-editor').value = p.notes || '';
+    window.scrollTo(0, 0);
+  }
+
+  /* ---- Render the star ratings ---- */
+  function renderRatings(p) {
+    const container = document.getElementById('ratings-container');
+    container.innerHTML = FORMATS.map(fmt => {
+      const val = p.ratings[fmt] || 0;
+      const stars = [1,2,3,4,5].map(n => `
+        <div class="star${n <= val ? ' filled' : ''}" data-fmt="${fmt}" data-val="${n}" title="${RATING_LABELS[n]}">
+          ${n <= val ? '★' : '☆'}
+        </div>
+      `).join('');
+      return `
+        <div class="rating-row">
+          <div class="rating-format">${fmt}</div>
+          <div class="rating-stars">${stars}</div>
+          <div class="rating-label">${val > 0 ? RATING_LABELS[val] : '—'}</div>
+        </div>
+      `;
+    }).join('');
+
+    container.querySelectorAll('.star').forEach(star => {
+      star.addEventListener('click', () => {
+        const p = db.find(x => x.id === currentId);
+        const fmt = star.dataset.fmt;
+        const val = parseInt(star.dataset.val);
+        p.ratings[fmt] = (p.ratings[fmt] === val) ? 0 : val;
+        saveData();
+        renderRatings(p);
+      });
+    });
+  }
+
+  /* ---- Render notes ---- */
+  function renderNotes(p) {
+    const box = document.getElementById('d-notes');
+    if (p.notes) {
+      box.textContent = p.notes;
+      box.classList.remove('notes-empty');
+    } else {
+      box.textContent = 'No notes yet. Add some below.';
+      box.classList.add('notes-empty');
+    }
+  }
+
+  /* ---- Back button ---- */
+  document.getElementById('back-btn').addEventListener('click', () => {
+    document.getElementById('detail-view').classList.remove('active');
+    document.getElementById('home-view').classList.add('active');
+    renderHome(document.getElementById('search-input').value);
+  });
+
+  /* ---- Search ---- */
+  document.getElementById('search-input').addEventListener('input', e => {
+    renderHome(e.target.value);
+  });
+
+  /* ---- Save notes ---- */
+  document.getElementById('save-notes-btn').addEventListener('click', () => {
+    const p = db.find(x => x.id === currentId);
+    p.notes = document.getElementById('notes-editor').value;
+    saveData();
+    renderNotes(p);
+  });
+
+  /* ---- Delete Pokémon ---- */
+  document.getElementById('delete-btn').addEventListener('click', () => {
+    if (!confirm(`Delete ${db.find(x => x.id === currentId)?.name}? This can't be undone.`)) return;
+    db = db.filter(x => x.id !== currentId);
+    saveData();
+    document.getElementById('detail-view').classList.remove('active');
+    document.getElementById('home-view').classList.add('active');
+    renderHome(document.getElementById('search-input').value);
+  });
+
+  /* ---- Add Pokémon modal ---- */
+  document.getElementById('open-add-btn').addEventListener('click', () => {
+    document.getElementById('m-name').value = '';
+    document.getElementById('m-dex').value = '';
+    document.getElementById('modal-overlay').classList.add('open');
+  });
+
+  document.getElementById('cancel-add-btn').addEventListener('click', () => {
+    document.getElementById('modal-overlay').classList.remove('open');
+  });
+
+  document.getElementById('modal-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('modal-overlay')) {
+      document.getElementById('modal-overlay').classList.remove('open');
+    }
+  });
+
+  document.getElementById('confirm-add-btn').addEventListener('click', () => {
+    const name = document.getElementById('m-name').value.trim();
+    const dex  = parseInt(document.getElementById('m-dex').value) || 0;
+    const t1   = document.getElementById('m-type1').value;
+    const t2   = document.getElementById('m-type2').value;
+    if (!name) { alert('Please enter a name.'); return; }
+    const types = t2 ? [t1, t2] : [t1];
+    const ratings = {};
+    FORMATS.forEach(f => ratings[f] = 0);
+    db.push({ id: nextId++, name, dex, types, ratings, notes: '' });
+    saveData();
+    document.getElementById('modal-overlay').classList.remove('open');
+    renderHome(document.getElementById('search-input').value);
+  });
+
+  /* ---- Init ---- */
+  loadData();
+  renderHome();
+
+</script>
+</body>
+</html>
