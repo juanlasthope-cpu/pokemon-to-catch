@@ -3,886 +3,297 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pokémon GO Database</title>
-
-  <!-- ============================================================
-    FONTS
-    Change the font by swapping out the Google Fonts link and
-    updating the font-family in the body rule below.
-    Browse fonts at: https://fonts.google.com
-  ============================================================ -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-
-  <style>
-
-    /* ============================================================
-      GLOBAL COLORS — change these to retheme the whole site
-      Just swap the hex values to any color you like.
-      Use https://coolors.co to find nice palettes.
-    ============================================================ */
-    :root {
-      --bg-page:        #f5f5f0;      /* ← page background */
-      --bg-card:        #ffffff;      /* ← card/panel background */
-      --bg-hover:       #f0f0ea;      /* ← card hover background */
-      --bg-input:       #ffffff;      /* ← search bar background */
-      --bg-secondary:   #f0f0ea;      /* ← muted backgrounds (notes box, etc.) */
-
-      --text-primary:   #1a1a18;      /* ← main text color */
-      --text-secondary: #6b6b63;      /* ← muted/label text */
-      --text-tertiary:  #9e9e96;      /* ← very muted text (dex numbers, hints) */
-
-      --border:         rgba(0,0,0,0.1);   /* ← card/input borders */
-      --border-strong:  rgba(0,0,0,0.2);   /* ← focused input border */
-
-      --star-filled:    #E9B934;      /* ← filled star color */
-      --star-border:    #C99A20;      /* ← filled star border */
-
-      --accent:         #3d6b4f;      /* ← accent color (add button hover, etc.) */
-    }
-
-    /* ============================================================
-      BASE / RESET
-    ============================================================ */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Inter', sans-serif;  /* ← change font here */
-      font-size: 16px;
-      line-height: 1.6;
-      background: var(--bg-page);
-      color: var(--text-primary);
-      min-height: 100vh;
-    }
-
-    /* ============================================================
-      LAYOUT WRAPPER
-      Controls max width and centering of all content.
-      Change max-width to make the site wider or narrower.
-    ============================================================ */
-    .container {
-      max-width: 720px;       /* ← site max width */
-      margin: 0 auto;
-      padding: 2rem 1.25rem;
-    }
-
-    /* ============================================================
-      HEADER
-    ============================================================ */
-    .header {
-      text-align: center;
-      margin-bottom: 2.5rem;
-    }
-
-    .header-icon {
-      font-size: 36px;        /* ← icon/emoji size */
-      display: block;
-      margin-bottom: 10px;
-    }
-
-    .header h1 {
-      font-size: 28px;        /* ← site title size */
-      font-weight: 600;
-      color: var(--text-primary);
-      letter-spacing: -0.5px;
-    }
-
-    .header p {
-      font-size: 14px;
-      color: var(--text-secondary);
-      margin-top: 6px;
-    }
-
-    /* ============================================================
-      SEARCH BAR
-    ============================================================ */
-    .search-wrap {
-      position: relative;
-      max-width: 500px;
-      margin: 0 auto 1.5rem;
-    }
-
-    .search-wrap input {
-      width: 100%;
-      padding: 12px 16px 12px 44px;
-      font-size: 15px;
-      font-family: inherit;
-      border: 1.5px solid var(--border-strong);
-      border-radius: 12px;    /* ← search bar corner roundness */
-      background: var(--bg-input);
-      color: var(--text-primary);
-      outline: none;
-      transition: border-color 0.15s;
-    }
-
-    .search-wrap input:focus {
-      border-color: var(--accent);
-    }
-
-    .search-icon {
-      position: absolute;
-      left: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-tertiary);
-      font-size: 18px;
-      pointer-events: none;
-    }
-
-    /* ============================================================
-      RESULTS COUNT LABEL
-    ============================================================ */
-    .results-label {
-      font-size: 12px;
-      color: var(--text-tertiary);
-      text-align: center;
-      margin-bottom: 1rem;
-    }
-
-    /* ============================================================
-      POKÉMON CARD GRID
-      Change minmax(140px, 1fr) to make cards wider or narrower.
-      e.g. minmax(180px, 1fr) = fewer, wider cards
-           minmax(110px, 1fr) = more, narrower cards
-    ============================================================ */
-    .pokemon-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 12px;
-      margin-bottom: 1.5rem;
-    }
-
-    /* ============================================================
-      INDIVIDUAL POKÉMON CARD
-    ============================================================ */
-    .pokemon-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 14px;    /* ← card corner roundness */
-      padding: 1rem;
-      cursor: pointer;
-      text-align: center;
-      transition: border-color 0.15s, background 0.15s, transform 0.1s;
-    }
-
-    .pokemon-card:hover {
-      background: var(--bg-hover);
-      border-color: var(--border-strong);
-      transform: translateY(-2px);  /* ← remove this line to disable the lift effect */
-    }
-
-    .pokemon-card .dex-num {
-      font-size: 11px;
-      color: var(--text-tertiary);
-      margin-bottom: 4px;
-    }
-
-    .pokemon-card .poke-name {
-      font-size: 15px;
-      font-weight: 500;
-      color: var(--text-primary);
-    }
-
-    .pokemon-card .type-badges {
-      display: flex;
-      gap: 4px;
-      justify-content: center;
-      margin-top: 8px;
-      flex-wrap: wrap;
-    }
-
-    /* ============================================================
-      TYPE BADGES
-      Each type has its own color. Change the background/color
-      values below to restyle any type badge.
-    ============================================================ */
-    .type-badge {
-      font-size: 10px;
-      padding: 2px 8px;
-      border-radius: 99px;
-      font-weight: 500;
-      text-transform: capitalize;
-    }
-
-    .type-normal   { background: #F5F5F5; color: #424242; }
-    .type-fire     { background: #FDEBD0; color: #8B3A00; }
-    .type-water    { background: #DBEEF8; color: #1A5F7A; }
-    .type-grass    { background: #D5EDD5; color: #2A5E2A; }
-    .type-electric { background: #FEF9C3; color: #7A5B00; }
-    .type-ice      { background: #E0F7FA; color: #00546B; }
-    .type-fighting { background: #FFEBEE; color: #7A0000; }
-    .type-poison   { background: #F3E5F5; color: #4A148C; }
-    .type-ground   { background: #FFF3E0; color: #6D4C00; }
-    .type-flying   { background: #E8EAF6; color: #1A237E; }
-    .type-psychic  { background: #FCE4EC; color: #8B0040; }
-    .type-bug      { background: #F9FBE7; color: #4C5900; }
-    .type-rock     { background: #EFEBE9; color: #4E342E; }
-    .type-ghost    { background: #EDE7F6; color: #311B92; }
-    .type-dragon   { background: #E8EAF6; color: #1A237E; }
-    .type-dark     { background: #ECEFF1; color: #263238; }
-    .type-steel    { background: #ECEFF1; color: #37474F; }
-    .type-fairy    { background: #FCE4EC; color: #880E4F; }
-
-    /* ============================================================
-      ADD POKÉMON BUTTON
-    ============================================================ */
-    .add-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 20px;
-      border: 1px solid var(--border-strong);
-      border-radius: 10px;
-      background: transparent;
-      color: var(--text-secondary);
-      font-size: 14px;
-      font-family: inherit;
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s;
-    }
-
-    .add-btn:hover {
-      background: var(--bg-hover);
-      color: var(--text-primary);
-    }
-
-    .no-results {
-      text-align: center;
-      color: var(--text-secondary);
-      padding: 2rem 0;
-      font-size: 14px;
-      grid-column: 1 / -1;
-    }
-
-    /* ============================================================
-      DETAIL PAGE — BACK BUTTON
-    ============================================================ */
-    .back-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 14px;
-      color: var(--text-secondary);
-      cursor: pointer;
-      padding: 4px 0;
-      margin-bottom: 1.5rem;
-      background: none;
-      border: none;
-      font-family: inherit;
-      transition: color 0.15s;
-    }
-
-    .back-btn:hover { color: var(--text-primary); }
-
-    /* ============================================================
-      DETAIL PAGE — POKÉMON HEADER
-    ============================================================ */
-    .detail-name {
-      font-size: 28px;        /* ← Pokémon name size on detail page */
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-
-    .detail-dex {
-      font-size: 13px;
-      color: var(--text-tertiary);
-      margin-top: 2px;
-    }
-
-    .detail-types {
-      display: flex;
-      gap: 6px;
-      margin-top: 10px;
-    }
-
-    /* ============================================================
-      SECTION LABELS (small uppercase labels above sections)
-    ============================================================ */
-    .section-label {
-      font-size: 11px;
-      color: var(--text-tertiary);
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      margin-bottom: 12px;
-      margin-top: 1.75rem;
-    }
-
-    /* ============================================================
-      RATINGS — FORMAT ROWS
-    ============================================================ */
-    .rating-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 10px;
-    }
-
-    .rating-format {
-      font-size: 14px;
-      color: var(--text-secondary);
-      width: 150px;
-      flex-shrink: 0;
-    }
-
-    .rating-stars { display: flex; gap: 4px; }
-
-    /* ============================================================
-      STARS
-      Change --star-filled in :root above to change star color.
-    ============================================================ */
-    .star {
-      width: 22px;
-      height: 22px;
-      border-radius: 4px;
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      cursor: pointer;
-      transition: background 0.1s, transform 0.1s;
-      user-select: none;
-    }
-
-    .star:hover { transform: scale(1.15); }
-
-    .star.filled {
-      background: var(--star-filled);
-      border-color: var(--star-border);
-    }
-
-    .rating-label {
-      font-size: 12px;
-      color: var(--text-tertiary);
-      min-width: 70px;
-    }
-
-    /* ============================================================
-      NOTES BOX (display)
-    ============================================================ */
-    .notes-box {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px;
-      font-size: 14px;
-      color: var(--text-primary);
-      line-height: 1.7;
-      min-height: 80px;
-      white-space: pre-wrap;
-    }
-
-    .notes-empty {
-      color: var(--text-tertiary);
-      font-style: italic;
-    }
-
-    /* ============================================================
-      EDIT NOTES SECTION
-    ============================================================ */
-    .edit-section {
-      margin-top: 1.5rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid var(--border);
-    }
-
-    .edit-section textarea {
-      width: 100%;
-      min-height: 90px;
-      font-size: 14px;
-      font-family: inherit;
-      padding: 10px 12px;
-      border: 1px solid var(--border-strong);
-      border-radius: 10px;
-      background: var(--bg-input);
-      color: var(--text-primary);
-      resize: vertical;
-      margin-bottom: 10px;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-
-    .edit-section textarea:focus {
-      border-color: var(--accent);
-    }
-
-    .save-btn {
-      padding: 9px 20px;
-      font-size: 14px;
-      font-family: inherit;
-      border: 1px solid var(--border-strong);
-      border-radius: 10px;
-      background: var(--bg-card);
-      color: var(--text-primary);
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-
-    .save-btn:hover { background: var(--bg-hover); }
-
-    /* ============================================================
-      DELETE BUTTON (on detail page)
-    ============================================================ */
-    .delete-btn {
-      padding: 9px 20px;
-      font-size: 14px;
-      font-family: inherit;
-      border: 1px solid #f5c2c2;
-      border-radius: 10px;
-      background: transparent;
-      color: #c0392b;
-      cursor: pointer;
-      margin-left: 8px;
-      transition: background 0.15s;
-    }
-
-    .delete-btn:hover { background: #fff0f0; }
-
-    /* ============================================================
-      ADD POKÉMON MODAL
-    ============================================================ */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.4);
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-      padding: 1rem;
-    }
-
-    .modal-overlay.open { display: flex; }
-
-    .modal {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 16px;    /* ← modal corner roundness */
-      padding: 1.75rem;
-      width: 100%;
-      max-width: 420px;
-    }
-
-    .modal h3 {
-      font-size: 17px;
-      font-weight: 600;
-      margin-bottom: 1.25rem;
-      color: var(--text-primary);
-    }
-
-    .modal label {
-      font-size: 12px;
-      color: var(--text-secondary);
-      display: block;
-      margin-bottom: 4px;
-      margin-top: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .modal input,
-    .modal select {
-      width: 100%;
-      padding: 9px 12px;
-      font-size: 14px;
-      font-family: inherit;
-      border: 1px solid var(--border-strong);
-      border-radius: 8px;
-      background: var(--bg-input);
-      color: var(--text-primary);
-      outline: none;
-    }
-
-    .modal input:focus,
-    .modal select:focus {
-      border-color: var(--accent);
-    }
-
-    .modal-btns {
-      display: flex;
-      gap: 8px;
-      margin-top: 1.5rem;
-      justify-content: flex-end;
-    }
-
-    .modal-btns button {
-      padding: 9px 18px;
-      font-size: 14px;
-      font-family: inherit;
-      border: 1px solid var(--border-strong);
-      border-radius: 8px;
-      background: transparent;
-      color: var(--text-primary);
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-
-    .modal-btns button:hover { background: var(--bg-hover); }
-
-    .modal-btns button.primary {
-      background: var(--accent);   /* ← "Add" button color — change --accent in :root */
-      color: #fff;
-      border-color: transparent;
-    }
-
-    .modal-btns button.primary:hover { opacity: 0.88; }
-
-    /* ============================================================
-      VIEWS (home vs detail)
-      Don't touch these — they control page navigation.
-    ============================================================ */
-    .home-view, .detail-view { display: none; }
-    .home-view.active, .detail-view.active { display: block; }
-
-  </style>
+  <title>Pokémon GO — What Is Worth Catching?</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-
 <div class="container" id="root">
 
-  <!-- ============================================================
-    HOME VIEW — main search page
-  ============================================================ -->
+  <!-- ── HOME VIEW ── -->
   <div class="home-view active" id="home-view">
 
     <div class="header">
-      <span class="header-icon">⚪</span>  <!-- ← swap this emoji for any icon -->
-      <h1>Pokémon GO Database</h1>          <!-- ← change the site title here -->
-      <p>Track which Pokémon are useful and why</p>  <!-- ← subtitle -->
+      <h1>What Is Worth Catching?</h1>
+    </div>
+
+    <!-- Admin bar — always visible -->
+    <div class="admin-bar">
+      <div class="admin-status">
+        <div class="admin-dot" id="admin-dot"></div>
+        <span id="admin-status-text">Viewing</span>
+      </div>
+      <button class="admin-bar-btn" id="admin-toggle-btn">🔒 Admin login</button>
+      <button class="admin-bar-btn" id="import-ratings-btn" style="display:none;">⬇️ Import ratings</button>
+      <button class="admin-bar-btn" id="votes-admin-btn" style="display:none;">🗳️ Votes</button>
+      <button class="admin-bar-btn" id="ratings-mode-btn" style="display:none;">📊 Using: Community</button>
+      <button class="admin-bar-btn" id="watchlist-btn">⭐ Watchlist</button>
+      <button class="admin-bar-btn" id="filter-btn">🔍 Filter</button>
+      <button class="admin-bar-btn" id="feedback-btn">💬 Feedback</button>
+      <button class="admin-bar-btn" id="info-btn">ℹ️ Info</button>
     </div>
 
     <div class="search-wrap">
-      <span class="search-icon">🔍</span>
-      <input type="text" id="search-input" placeholder="Search Pokémon..." autocomplete="off" />
+      <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="search-input" placeholder="Search Pokémon by name or #..." autocomplete="off" />
     </div>
 
-    <div class="results-label" id="results-label"></div>
-
-    <div class="pokemon-grid" id="pokemon-grid"></div>
-
-    <div style="text-align: center; margin-top: 1rem;">
-      <button class="add-btn" id="open-add-btn">+ Add Pokémon</button>
+    <div id="idle-state" class="state-box">
+      <div class="big">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-tertiary)"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </div>
+      <div>Search to find any Pokémon in GO</div>
+      <div class="hint">Type a name or Pokédex number above</div>
+    </div>
+    <div id="loading-state" class="state-box" style="display:none;">
+      <span class="loading-spinner"></span> Loading Pokémon GO data…
+    </div>
+    <div id="error-state" style="display:none;">
+      <div class="error-banner" id="error-msg"></div>
+    </div>
+    <div id="results-area" style="display:none;">
+      <div class="results-label" id="results-label"></div>
+      <div class="pokemon-grid" id="pokemon-grid"></div>
+      <button class="load-more-btn" id="load-more-btn" style="display:none;">Show more</button>
     </div>
 
+  </div><!-- end home-view -->
+
+  <!-- ── FILTER PANEL ── -->
+  <div id="filter-panel" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:150;align-items:flex-start;justify-content:flex-end;padding:3.5rem 1rem 1rem;">
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;width:100%;max-width:340px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <span style="font-weight:600;font-size:15px;">🔍 Filter Pokémon</span>
+        <button id="filter-close" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text-tertiary);">✕</button>
+      </div>
+
+      <div class="filter-section-label">Format &amp; Minimum Tier</div>
+      <div id="filter-formats" class="filter-fmt-rows"></div>
+
+      <div class="filter-section-label" style="margin-top:1rem;">Little Cup</div>
+      <div id="filter-lc" class="filter-fmt-rows"></div>
+
+      <div class="filter-section-label" style="margin-top:1rem;">↑ Show Evolution Flag When Rated At Least</div>
+      <div id="filter-evo-fmt-rows" class="filter-fmt-rows"></div>
+
+      <div class="filter-section-label" style="margin-top:1rem;">Flags</div>
+      <div id="filter-flags" class="filter-chip-row"></div>
+
+      <div class="filter-section-label" style="margin-top:1rem;">Type
+        <label style="font-size:11px;font-weight:400;margin-left:10px;cursor:pointer;">
+          <input type="checkbox" id="filter-type-and" style="margin-right:3px;">Must match both types
+        </label>
+      </div>
+      <div id="filter-types" class="filter-chip-row"></div>
+
+      <div class="filter-section-label" style="margin-top:1rem;">Generation</div>
+      <div id="filter-gens" class="filter-chip-row"></div>
+
+      <div id="settings-tier-checks" style="display:none;"></div>
+      <div id="settings-fmt-checks" style="display:none;"></div>
+      <div id="settings-evo-tier-checks" style="display:none;"></div>
+      <div id="settings-evo-fmt-checks" style="display:none;"></div>
+      <div id="settings-lc-checks" style="display:none;"></div>
+
+      <div style="display:flex;gap:8px;margin-top:0.25rem;">
+        <button id="filter-reset" style="flex:1;padding:9px;font-size:13px;font-family:inherit;border:1px solid var(--border-strong);border-radius:8px;background:transparent;color:var(--text-secondary);cursor:pointer;">Clear all</button>
+        <button id="filter-apply" style="flex:2;padding:9px;font-size:13px;font-family:inherit;border:none;border-radius:8px;background:var(--accent);color:#fff;cursor:pointer;font-weight:600;">Apply Filters</button>
+      </div>
+    </div>
   </div>
 
-  <!-- ============================================================
-    DETAIL VIEW — individual Pokémon page
-  ============================================================ -->
+  <!-- ── VOTES ADMIN VIEW ── -->
+  <div id="votes-admin-view" style="display:none;position:fixed;inset:0;background:var(--bg-page);z-index:150;overflow-y:auto;">
+    <div class="container" style="padding-top:2rem;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.5rem;">
+        <button id="votes-admin-back" class="back-btn" style="position:static;">← Back</button>
+        <h2 style="font-size:20px;font-weight:600;">🗳️ Community Votes</h2>
+      </div>
+      <div id="votes-admin-content"></div>
+    </div>
+  </div>
+
+  <!-- ── VOTE SUGGEST MODAL ── -->
+  <div id="vote-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:250;align-items:center;justify-content:center;">
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;width:100%;max-width:400px;margin:1rem;box-shadow:0 8px 32px rgba(0,0,0,0.2);max-height:90vh;overflow-y:auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <span style="font-weight:600;font-size:15px;" id="vote-modal-title">💬 Suggest a Change</span>
+        <button id="vote-modal-close" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text-tertiary);">✕</button>
+      </div>
+      <div style="display:flex;gap:0;margin-bottom:1rem;border-bottom:1px solid var(--border);">
+        <button id="vote-tab-ratings" style="flex:1;padding:8px;font-size:13px;font-family:inherit;border:none;border-bottom:2px solid var(--accent);background:transparent;color:var(--accent);font-weight:600;cursor:pointer;">Ratings</button>
+        <button id="vote-tab-notes" style="flex:1;padding:8px;font-size:13px;font-family:inherit;border:none;border-bottom:2px solid transparent;background:transparent;color:var(--text-tertiary);cursor:pointer;">Notes</button>
+      </div>
+      <div id="vote-modal-content"></div>
+      <div id="vote-modal-notes-content" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- ── INFO MODAL ── -->
+  <div id="info-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center;">
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;width:100%;max-width:400px;margin:1rem;box-shadow:0 8px 32px rgba(0,0,0,0.2);max-height:85vh;overflow-y:auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <span style="font-weight:600;font-size:15px;">ℹ️ How To Use</span>
+        <button id="info-close" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text-tertiary);">✕</button>
+      </div>
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;">
+        <div style="font-weight:600;color:var(--text-primary);margin-bottom:4px;">Browsing Pokémon</div>
+        Search by name or Pokédex number. Use the 🔍 Filter button to narrow by format rating, type, generation, flags, and more.<br><br>
+        <div style="font-weight:600;color:var(--text-primary);margin-bottom:4px;">Watchlist ⭐</div>
+        Add any Pokémon to your personal watchlist in two ways:<br>
+        • Tap the <strong>☆ star</strong> in the bottom-right corner of their card on the main page<br>
+        • Or tap <strong>☆ Watchlist</strong> at the top of their individual page<br>
+        Access your watchlist anytime with the ⭐ Watchlist button in the top bar.<br><br>
+        <div style="font-weight:600;color:var(--text-primary);margin-bottom:4px;">Ratings</div>
+        Each Pokémon has community ratings for Raids, Great League, Ultra League, Master League, and Gym Defense. Ratings go from S (best) to E (bottom tier). Unrated means no data is available yet.<br><br>
+        <div style="font-weight:600;color:var(--text-primary);margin-bottom:4px;">Evolution Arrow ↑</div>
+        A green ↑ arrow on a card means this Pokémon evolves into something worth having.<br><br>
+        <div style="font-weight:600;color:var(--text-primary);margin-bottom:4px;">⚠️ Flag</div>
+        A ⚠️ badge means there are other factors that may make this Pokémon worth catching — such as Little Cup viability or special moves.<br><br>
+        <div style="font-weight:600;color:var(--text-primary);margin-bottom:4px;">Suggest a Rating Change</div>
+        On any Pokémon's detail page, tap 💬 Suggest a Rating Change to propose a different tier or suggest a note to add.
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FEEDBACK MODAL ── -->
+  <div id="feedback-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center;">
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;width:100%;max-width:400px;margin:1rem;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <span style="font-weight:600;font-size:15px;">💬 Feedback</span>
+        <button id="feedback-close" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text-tertiary);">✕</button>
+      </div>
+      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:1rem;">Found a bug or have a suggestion? Let us know!</div>
+      <div style="margin-bottom:0.75rem;">
+        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:4px;">Type</label>
+        <select id="feedback-type" style="width:100%;padding:8px;font-size:13px;font-family:inherit;border:1px solid var(--border-strong);border-radius:8px;background:var(--bg-input);color:var(--text-primary);outline:none;">
+          <option value="bug">🐛 Bug Report</option>
+          <option value="feature">✨ Feature Request</option>
+          <option value="other">💬 Other</option>
+        </select>
+      </div>
+      <div style="margin-bottom:0.75rem;">
+        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:4px;">Message</label>
+        <textarea id="feedback-text" rows="4" placeholder="Describe the bug or feature you'd like..." style="width:100%;padding:8px;font-size:13px;font-family:inherit;border:1px solid var(--border-strong);border-radius:8px;background:var(--bg-input);color:var(--text-primary);outline:none;resize:vertical;"></textarea>
+      </div>
+      <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:1rem;">Feedback is saved locally on your device.</div>
+      <div style="display:flex;gap:8px;">
+        <button id="feedback-cancel" style="flex:1;padding:9px;font-size:13px;font-family:inherit;border:1px solid var(--border-strong);border-radius:8px;background:transparent;color:var(--text-secondary);cursor:pointer;">Cancel</button>
+        <button id="feedback-submit" style="flex:2;padding:9px;font-size:13px;font-family:inherit;border:none;border-radius:8px;background:var(--accent);color:#fff;cursor:pointer;font-weight:600;">Submit</button>
+      </div>
+      <div id="feedback-list" style="margin-top:1rem;"></div>
+    </div>
+  </div>
+
+  <!-- ── DETAIL VIEW ── -->
   <div class="detail-view" id="detail-view">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.5rem;">
+      <button class="back-btn" id="back-btn" style="position:static;margin-bottom:0;">← All Pokémon</button>
+      <button class="watchlist-star-btn" id="watchlist-star-btn" title="Add to watchlist">☆ Watchlist</button>
+    </div>
 
-    <button class="back-btn" id="back-btn">← All Pokémon</button>
+    <div class="detail-header">
+      <div id="d-sprite-wrap"></div>
+      <div>
+        <div class="detail-name" id="d-name"></div>
+        <div class="detail-dex" id="d-dex"></div>
+        <div class="detail-types" id="d-types"></div>
+      </div>
+    </div>
 
-    <div class="detail-name" id="d-name"></div>
-    <div class="detail-dex" id="d-dex"></div>
-    <div class="detail-types" id="d-types"></div>
-
-    <div class="section-label">Ratings by format</div>
-    <div id="ratings-container"></div>
+    <div id="ratings-container" style="margin-top:1rem;"></div>
+    <div style="text-align:right;margin-top:8px;">
+      <button id="suggest-change-btn" style="font-size:12px;font-family:inherit;padding:5px 13px;border-radius:7px;border:1.5px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer;font-weight:500;transition:all 0.15s;">💬 Suggest a Rating or Note Change</button>
+    </div>
+    <div class="detail-tier-legend">
+      <div class="detail-legend-title">Tier Guide</div>
+      <div class="detail-legend-grid">
+        <span class="dtl-swatch" style="background:var(--tier-s);color:#fff">S</span><span>Meta — Format Defining</span>
+        <span class="dtl-swatch" style="background:var(--tier-a);color:#fff">A</span><span>Very Strong — Staple Pick</span>
+        <span class="dtl-swatch" style="background:var(--tier-b);color:#333">B</span><span>Viable — Solid but not top tier</span>
+        <span class="dtl-swatch" style="background:var(--tier-c);color:#333">C</span><span>Mediocre — Situational use</span>
+        <span class="dtl-swatch" style="background:var(--tier-d);color:#fff">D</span><span>Barely Usable — Hard to justify</span>
+        <span class="dtl-swatch" style="background:var(--tier-e);color:#fff">E</span><span>Bottom Tier — Not worth using</span>
+        <span class="dtl-swatch" style="background:var(--tier-unrated);color:#fff">U</span><span>Unrated — No data available</span>
+      </div>
+    </div>
+    <div id="readonly-notice" class="readonly-notice" style="display:none;">🔒 Log in as admin to edit ratings</div>
 
     <div class="section-label">Notes</div>
     <div class="notes-box" id="d-notes"></div>
 
-    <div class="edit-section">
-      <div class="section-label" style="margin-top: 0;">Edit notes</div>
-      <textarea id="notes-editor" placeholder="Add notes about movesets, specific counters, tips..."></textarea>
+    <!-- Only visible to admin -->
+    <div class="edit-section" id="edit-section" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+        <div class="section-label" style="margin:0;">Ratings source</div>
+        <button class="ratings-src-btn" id="ratings-src-btn">Using: Community</button>
+      </div>
+      <div class="section-label" style="margin-top:0;">Flags</div>
+      <label class="evolve-toggle-wrap" id="evolve-toggle-wrap">
+        <input type="checkbox" id="evolve-checkbox" />
+        <span class="evolve-toggle-label">Potentially Relevant Evolution</span>
+      </label>
+      <label class="evolve-toggle-wrap" id="consider-toggle-wrap">
+        <input type="checkbox" id="consider-checkbox" />
+        <span class="evolve-toggle-label">⚠️ Other Factors — May Be Worth Catching</span>
+      </label>
+      <div class="section-label">Edit notes</div>
+      <textarea id="notes-editor" placeholder="Add notes about movesets, counters, tips..."></textarea>
       <button class="save-btn" id="save-notes-btn">Save notes</button>
-      <button class="delete-btn" id="delete-btn">Delete Pokémon</button>
+      <button class="delete-btn" id="delete-btn">Remove from DB</button>
     </div>
 
+    <div id="evo-tree-container" style="margin-top:1.25rem;"></div>
   </div>
 
-  <!-- ============================================================
-    ADD POKÉMON MODAL
-  ============================================================ -->
-  <div class="modal-overlay" id="modal-overlay">
-    <div class="modal">
-      <h3>Add Pokémon</h3>
-
-      <label>Name</label>
-      <input type="text" id="m-name" placeholder="e.g. Mewtwo" />
-
-      <label>Pokédex #</label>
-      <input type="number" id="m-dex" placeholder="e.g. 150" />
-
-      <label>Primary type</label>
-      <select id="m-type1">
-        <option value="normal">Normal</option>
-        <option value="fire">Fire</option>
-        <option value="water">Water</option>
-        <option value="grass">Grass</option>
-        <option value="electric">Electric</option>
-        <option value="ice">Ice</option>
-        <option value="fighting">Fighting</option>
-        <option value="poison">Poison</option>
-        <option value="ground">Ground</option>
-        <option value="flying">Flying</option>
-        <option value="psychic">Psychic</option>
-        <option value="bug">Bug</option>
-        <option value="rock">Rock</option>
-        <option value="ghost">Ghost</option>
-        <option value="dragon">Dragon</option>
-        <option value="dark">Dark</option>
-        <option value="steel">Steel</option>
-        <option value="fairy">Fairy</option>
-      </select>
-
-      <label>Secondary type (optional)</label>
-      <select id="m-type2">
-        <option value="">None</option>
-        <option value="normal">Normal</option>
-        <option value="fire">Fire</option>
-        <option value="water">Water</option>
-        <option value="grass">Grass</option>
-        <option value="electric">Electric</option>
-        <option value="ice">Ice</option>
-        <option value="fighting">Fighting</option>
-        <option value="poison">Poison</option>
-        <option value="ground">Ground</option>
-        <option value="flying">Flying</option>
-        <option value="psychic">Psychic</option>
-        <option value="bug">Bug</option>
-        <option value="rock">Rock</option>
-        <option value="ghost">Ghost</option>
-        <option value="dragon">Dragon</option>
-        <option value="dark">Dark</option>
-        <option value="steel">Steel</option>
-        <option value="fairy">Fairy</option>
-      </select>
-
-      <div class="modal-btns">
-        <button id="cancel-add-btn">Cancel</button>
-        <button class="primary" id="confirm-add-btn">Add</button>
+  <!-- ── WATCHLIST VIEW ── -->
+  <div class="watchlist-view" id="watchlist-view" style="display:none;position:fixed;inset:0;background:var(--bg-page);z-index:150;overflow-y:auto;">
+    <div class="container" style="padding-top:2rem;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.5rem;">
+        <button class="back-btn" id="watchlist-back-btn" style="position:static;">← Back</button>
+        <h2 style="font-size:20px;font-weight:600;">⭐ My Watchlist</h2>
+      </div>
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:1rem;">
+        Your watchlist is saved locally in your browser.
+      </p>
+      <input type="text" id="watchlist-search" placeholder="Search watchlist..." autocomplete="off"
+        style="width:100%;padding:10px 14px;font-size:14px;font-family:inherit;border:1px solid var(--border-strong);border-radius:10px;background:var(--bg-input);color:var(--text-primary);outline:none;margin-bottom:1rem;">
+      <div class="pokemon-grid" id="watchlist-grid"></div>
+      <div id="watchlist-empty" style="display:none;text-align:center;padding:3rem 1rem;color:var(--text-tertiary);">
+        <div style="font-size:40px;margin-bottom:12px;">⭐</div>
+        <div>No Pokémon on your watchlist yet.</div>
+        <div style="font-size:13px;margin-top:6px;">Search for a Pokémon and tap the ⭐ button on its detail page.</div>
       </div>
     </div>
   </div>
+
+  <!-- ── LOGIN MODAL ── -->
+  <div class="login-overlay" id="login-overlay">
+    <div class="login-box">
+      <div class="lock-icon">🔐</div>
+      <h3>Admin Login</h3>
+      <p>Enter your password to enable editing</p>
+      <input type="password" id="login-input" placeholder="Password" autocomplete="current-password" />
+      <div class="login-error" id="login-error"></div>
+      <button class="login-submit" id="login-submit">Log in</button>
+      <br>
+      <button class="login-cancel" id="login-cancel">Cancel</button>
+    </div>
+  </div>
+
+
 
 </div><!-- end .container -->
 
-<!-- ============================================================
-  JAVASCRIPT — data and interactions
-  The data lives in localStorage so it persists across visits.
-  You can add starter Pokémon to the DEFAULT_DB array below.
-============================================================ -->
-<script>
-
-  /* ---- FORMATS — add or remove formats here ---- */
-  const FORMATS = ['Raids', 'Great League', 'Ultra League', 'Master League', 'Gym Battles'];
-
-  /* ---- RATING LABELS — one per star level (index = star count) ---- */
-  const RATING_LABELS = ['', 'Poor', 'Below avg', 'Average', 'Good', 'Excellent'];
-
-  /* ---- STARTER DATA — edit or add to this to pre-populate the database ---- */
-  const DEFAULT_DB = [
-    {
-      id: 1,
-      name: 'Mewtwo',
-      dex: 150,
-      types: ['psychic'],
-      ratings: { 'Raids': 5, 'Great League': 1, 'Ultra League': 2, 'Master League': 5, 'Gym Battles': 4 },
-      notes: 'Best psychic attacker in the game. Shadow Mewtwo is even stronger for raids. Psystrike is the preferred charge move.'
-    },
-    {
-      id: 2,
-      name: 'Garchomp',
-      dex: 445,
-      types: ['dragon', 'ground'],
-      ratings: { 'Raids': 4, 'Great League': 1, 'Ultra League': 2, 'Master League': 5, 'Gym Battles': 4 },
-      notes: 'Top tier Master League pick and great ground/dragon attacker for raids. Mud Shot + Earth Power is the go-to moveset.'
-    },
-    {
-      id: 3,
-      name: 'Medicham',
-      dex: 308,
-      types: ['fighting', 'psychic'],
-      ratings: { 'Raids': 2, 'Great League': 5, 'Ultra League': 1, 'Master League': 1, 'Gym Battles': 2 },
-      notes: 'Absolute Great League monster. Counter + Ice Punch/Dynamic Punch. One of the most consistent picks in GL.'
-    },
-  ];
-
-  /* ---- Load data from localStorage (or use defaults on first visit) ---- */
-  let db, nextId;
-
-  function loadData() {
-    try {
-      const saved = localStorage.getItem('pokemon-go-db');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        db = parsed.db;
-        nextId = parsed.nextId;
-      } else {
-        db = DEFAULT_DB;
-        nextId = DEFAULT_DB.length + 1;
-      }
-    } catch(e) {
-      db = DEFAULT_DB;
-      nextId = DEFAULT_DB.length + 1;
-    }
-  }
-
-  function saveData() {
-    localStorage.setItem('pokemon-go-db', JSON.stringify({ db, nextId }));
-  }
-
-  /* ---- Type badge HTML ---- */
-  function typeBadge(type) {
-    return `<span class="type-badge type-${type}">${type}</span>`;
-  }
-
-  /* ---- Render the home grid ---- */
-  function renderHome(filter = '') {
-    const grid = document.getElementById('pokemon-grid');
-    const label = document.getElementById('results-label');
-    const filtered = filter
-      ? db.filter(p => p.name.toLowerCase().includes(filter.toLowerCase()))
-      : db;
-
-    label.textContent = db.length > 0 ? `${filtered.length} of ${db.length} Pokémon` : '';
-
-    if (filtered.length === 0) {
-      grid.innerHTML = `<div class="no-results">No Pokémon found${filter ? ` for "${filter}"` : ''}.</div>`;
-      return;
-    }
-
-    grid.innerHTML = filtered.map(p => `
-      <div class="pokemon-card" data-id="${p.id}">
-        <div class="dex-num">#${String(p.dex).padStart(3,'0')}</div>
-        <div class="poke-name">${p.name}</div>
-        <div class="type-badges">${p.types.map(typeBadge).join('')}</div>
-      </div>
-    `).join('');
-
-    grid.querySelectorAll('.pokemon-card').forEach(card => {
-      card.addEventListener('click', () => openDetail(parseInt(card.dataset.id)));
-    });
-  }
-
-  /* ---- Open a Pokémon's detail page ---- */
-  let currentId = null;
-
-  function openDetail(id) {
-    currentId = id;
-    const p = db.find(x => x.id === id);
-    document.getElementById('home-view').classList.remove('active');
-    document.getElementById('detail-view').classList.add('active');
-    document.getElementById('d-name').textContent = p.name;
-    document.getElementById('d-dex').textContent = `#${String(p.dex).padStart(3,'0')}`;
-    document.getElementById('d-types').innerHTML = p.types.map(typeBadge).join('');
-    renderRatings(p);
-    renderNotes(p);
-    document.getElementById('notes-editor').value = p.notes || '';
-    window.scrollTo(0, 0);
-  }
-
-  /* ---- Render the star ratings ---- */
-  function renderRatings(p) {
-    const container = document.getElementById('ratings-container');
-    container.innerHTML = FORMATS.map(fmt => {
-      const val = p.ratings[fmt] || 0;
-      const stars = [1,2,3,4,5].map(n => `
-        <div class="star${n <= val ? ' filled' : ''}" data-fmt="${fmt}" data-val="${n}" title="${RATING_LABELS[n]}">
-          ${n <= val ? '★' : '☆'}
-        </div>
-      `).join('');
-      return `
-        <div class="rating-row">
-          <div class="rating-format">${fmt}</div>
-          <div class="rating-stars">${stars}</div>
-          <div class="rating-label">${val > 0 ? RATING_LABELS[val] : '—'}</div>
-        </div>
-      `;
-    }).join('');
-
-    container.querySelectorAll('.star').forEach(star => {
-      star.addEventListener('click', () => {
-        const p = db.find(x => x.id === currentId);
-        const fmt = star.dataset.fmt;
-        const val = parseInt(star.dataset.val);
-        p.ratings[fmt] = (p.ratings[fmt] === val) ? 0 : val;
-        saveData();
-        renderRatings(p);
-      });
-    });
-  }
-
-  /* ---- Render notes ---- */
-  function renderNotes(p) {
-    const box = document.getElementById('d-notes');
-    if (p.notes) {
-      box.textContent = p.notes;
-      box.classList.remove('notes-empty');
-    } else {
-      box.textContent = 'No notes yet. Add some below.';
-      box.classList.add('notes-empty');
-    }
-  }
-
-  /* ---- Back button ---- */
-  document.getElementById('back-btn').addEventListener('click', () => {
-    document.getElementById('detail-view').classList.remove('active');
-    document.getElementById('home-view').classList.add('active');
-    renderHome(document.getElementById('search-input').value);
-  });
-
-  /* ---- Search ---- */
-  document.getElementById('search-input').addEventListener('input', e => {
-    renderHome(e.target.value);
-  });
-
-  /* ---- Save notes ---- */
-  document.getElementById('save-notes-btn').addEventListener('click', () => {
-    const p = db.find(x => x.id === currentId);
-    p.notes = document.getElementById('notes-editor').value;
-    saveData();
-    renderNotes(p);
-  });
-
-  /* ---- Delete Pokémon ---- */
-  document.getElementById('delete-btn').addEventListener('click', () => {
-    if (!confirm(`Delete ${db.find(x => x.id === currentId)?.name}? This can't be undone.`)) return;
-    db = db.filter(x => x.id !== currentId);
-    saveData();
-    document.getElementById('detail-view').classList.remove('active');
-    document.getElementById('home-view').classList.add('active');
-    renderHome(document.getElementById('search-input').value);
-  });
-
-  /* ---- Add Pokémon modal ---- */
-  document.getElementById('open-add-btn').addEventListener('click', () => {
-    document.getElementById('m-name').value = '';
-    document.getElementById('m-dex').value = '';
-    document.getElementById('modal-overlay').classList.add('open');
-  });
-
-  document.getElementById('cancel-add-btn').addEventListener('click', () => {
-    document.getElementById('modal-overlay').classList.remove('open');
-  });
-
-  document.getElementById('modal-overlay').addEventListener('click', e => {
-    if (e.target === document.getElementById('modal-overlay')) {
-      document.getElementById('modal-overlay').classList.remove('open');
-    }
-  });
-
-  document.getElementById('confirm-add-btn').addEventListener('click', () => {
-    const name = document.getElementById('m-name').value.trim();
-    const dex  = parseInt(document.getElementById('m-dex').value) || 0;
-    const t1   = document.getElementById('m-type1').value;
-    const t2   = document.getElementById('m-type2').value;
-    if (!name) { alert('Please enter a name.'); return; }
-    const types = t2 ? [t1, t2] : [t1];
-    const ratings = {};
-    FORMATS.forEach(f => ratings[f] = 0);
-    db.push({ id: nextId++, name, dex, types, ratings, notes: '' });
-    saveData();
-    document.getElementById('modal-overlay').classList.remove('open');
-    renderHome(document.getElementById('search-input').value);
-  });
-
-  /* ---- Init ---- */
-  loadData();
-  renderHome();
-
-</script>
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Static data -->
+  <script src="js/data.js"></script>
+  <!-- Supabase integration -->
+  <script src="js/supabase.js"></script>
+  <!-- App logic -->
+  <script src="js/app.js"></script>
 </body>
 </html>
