@@ -276,7 +276,10 @@
       <h3>Admin Login</h3>
       <p>Sign in with your Supabase account</p>
       <input type="email" id="login-email" class="modal-input" placeholder="Email" autocomplete="email" style="margin-bottom:8px;" />
-      <input type="password" id="login-input" placeholder="Password" autocomplete="current-password" />
+      <div style="position:relative;display:flex;align-items:center;">
+        <input type="password" id="login-input" placeholder="Password" autocomplete="current-password" style="flex:1;padding-right:40px;" />
+        <button id="toggle-password" type="button" style="position:absolute;right:10px;background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-tertiary);padding:0;line-height:1;" title="Show/hide password">👁</button>
+      </div>
       <div class="login-error" id="login-error"></div>
       <button class="login-submit" id="login-submit">Log in</button>
       <br>
