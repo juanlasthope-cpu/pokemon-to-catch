@@ -204,6 +204,20 @@
     document.getElementById('login-overlay').classList.remove('open');
   });
 
+  document.getElementById('toggle-password').addEventListener('click', () => {
+    const input = document.getElementById('login-input');
+    const btn   = document.getElementById('toggle-password');
+    if (input.type === 'password') {
+      input.type = 'text';
+      btn.textContent = '🙈';
+      btn.title = 'Hide password';
+    } else {
+      input.type = 'password';
+      btn.textContent = '👁';
+      btn.title = 'Show password';
+    }
+  });
+
   /* ================================================================
     FETCH & PARSE
   ================================================================ */
