@@ -136,36 +136,69 @@
   /* ================================================================
     LOGIN MODAL
   ================================================================ */
-  document.getElementById('admin-toggle-btn').addEventListener('click', () => {
+  document.getElementById('admin-toggle-btn').addEventListener('click', async () => {
     if (Auth.isLoggedIn()) {
-      Auth.logout();
+      await Auth.logout();
       refreshAdminUI();
     } else {
-      document.getElementById('login-input').value = '';
+      const emailEl = document.getElementById('login-email');
+      const passEl  = document.getElementById('login-input');
+      if (emailEl) emailEl.value = '';
+      passEl.value = '';
       document.getElementById('login-error').textContent = '';
       document.getElementById('login-overlay').classList.add('open');
-      setTimeout(() => document.getElementById('login-input').focus(), 50);
+      setTimeout(() => { if (emailEl) emailEl.focus(); else passEl.focus(); }, 50);
     }
   });
 
-  function attemptLogin() {
-    const pw = document.getElementById('login-input').value;
-    if (Auth.verify(pw)) {
+  async function attemptLogin() {
+    const emailEl = document.getElementById('login-email');
+    const passEl  = document.getElementById('login-input');
+    const errEl   = document.getElementById('login-error');
+    const email    = emailEl ? emailEl.value.trim() : '';
+    const password = passEl.value;
+
+    if (!email || !password) {
+      errEl.textContent = 'Please enter your email and password.';
+      return;
+    }
+
+    const btn = document.getElementById('login-submit');
+    btn.textContent = 'Logging in...';
+    btn.disabled = true;
+
+    try {
+      await Auth.login(email, password);
       document.getElementById('login-overlay').classList.remove('open');
-      Auth.login();
+      errEl.textContent = '';
+      if (emailEl) emailEl.value = '';
+      passEl.value = '';
       refreshAdminUI();
-    } else {
-      document.getElementById('login-error').textContent = 'Incorrect password.';
-      const inp = document.getElementById('login-input');
-      inp.classList.add('shake');
-      inp.value = '';
-      setTimeout(() => inp.classList.remove('shake'), 400);
+      await syncWatchlist();
+      const adminRatings = await SB.loadAdminRatings();
+      for (const [pokemonId, formats] of Object.entries(adminRatings)) {
+        const entry = getUserEntry(pokemonId);
+        entry.myRatings = formats;
+      }
+      if (dataLoaded) renderResults();
+    } catch(err) {
+      errEl.textContent = 'Incorrect email or password. Please try again.';
+      passEl.value = '';
+      passEl.classList.add('shake');
+      setTimeout(() => passEl.classList.remove('shake'), 400);
+    } finally {
+      btn.textContent = 'Log in';
+      btn.disabled = false;
     }
   }
 
   document.getElementById('login-submit').addEventListener('click', attemptLogin);
   document.getElementById('login-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') attemptLogin();
+  });
+  const loginEmailEl = document.getElementById('login-email');
+  if (loginEmailEl) loginEmailEl.addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('login-input').focus();
   });
   document.getElementById('login-cancel').addEventListener('click', () => {
     document.getElementById('login-overlay').classList.remove('open');
