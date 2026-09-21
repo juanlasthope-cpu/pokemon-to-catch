@@ -1369,20 +1369,38 @@ function showImportBtn() {
   function saveFeedback(items) {
     try { localStorage.setItem('pogo-feedback-v1', JSON.stringify(items)); } catch(e) {}
   }
+  function loadDismissedFeedback() {
+    try { return new Set(JSON.parse(localStorage.getItem('pogo-feedback-dismissed-v1') || '[]')); } catch(e) { return new Set(); }
+  }
+  function saveDismissedFeedback(set) {
+    try { localStorage.setItem('pogo-feedback-dismissed-v1', JSON.stringify([...set])); } catch(e) {}
+  }
   async function renderFeedbackList() {
     const list = document.getElementById('feedback-list');
     if (!list) return;
     if (!SB.isAdmin()) { list.innerHTML = ''; return; }
-    const items = await SB.loadFeedback();
+    const dismissed = loadDismissedFeedback();
+    const items = (await SB.loadFeedback()).filter(f => !dismissed.has(String(f.id)));
     if (!items.length) { list.innerHTML = '<div style="font-size:12px;color:var(--text-tertiary);">No feedback yet.</div>'; return; }
     const icons = { bug:'🐛', feature:'✨', other:'💬' };
     list.innerHTML = '<div style="font-size:11px;font-weight:600;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">Feedback (' + items.length + ')</div>' +
       items.map(f =>
         '<div style="font-size:12px;padding:6px 8px;background:var(--bg-secondary);border-radius:6px;margin-bottom:4px;">' +
-        '<span style="font-weight:600;">' + (icons[f.type]||'💬') + ' ' + f.type + '</span>' +
-        '<span style="color:var(--text-tertiary);margin-left:6px;">' + new Date(f.created_at).toLocaleDateString() + '</span>' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;">' +
+        '<div><span style="font-weight:600;">' + (icons[f.type]||'💬') + ' ' + f.type + '</span>' +
+        '<span style="color:var(--text-tertiary);margin-left:6px;">' + new Date(f.created_at).toLocaleDateString() + '</span></div>' +
+        '<button class="feedback-clear-btn" data-fid="' + f.id + '" title="Hide from this list (does not delete it from the database)" style="background:none;border:none;color:var(--text-tertiary);cursor:pointer;font-size:13px;line-height:1;padding:2px 4px;flex-shrink:0;">✕</button>' +
+        '</div>' +
         '<div style="color:var(--text-secondary);margin-top:2px;">' + f.content + '</div></div>'
       ).join('');
+    list.querySelectorAll('.feedback-clear-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const d = loadDismissedFeedback();
+        d.add(String(btn.dataset.fid));
+        saveDismissedFeedback(d);
+        renderFeedbackList();
+      });
+    });
   }
   document.getElementById('info-btn').addEventListener('click', () => {
     document.getElementById('info-overlay').style.display = 'flex';
@@ -1396,6 +1414,8 @@ function showImportBtn() {
   });
 
   document.getElementById('feedback-btn').addEventListener('click', async () => {
+    document.getElementById('feedback-form-view').style.display = '';
+    document.getElementById('feedback-success-view').style.display = 'none';
     renderFeedbackList();
     document.getElementById('feedback-overlay').style.display = 'flex';
   });
@@ -1413,12 +1433,22 @@ function showImportBtn() {
     const text = document.getElementById('feedback-text').value.trim();
     if (!text) { alert('Please enter a message.'); return; }
     const type = document.getElementById('feedback-type').value;
+    const submitBtn = document.getElementById('feedback-submit');
+    submitBtn.disabled = true;
     try {
       await SB.submitFeedback(type, text);
       document.getElementById('feedback-text').value = '';
-      alert('Thank you for your feedback!');
+      document.getElementById('feedback-form-view').style.display = 'none';
+      document.getElementById('feedback-success-view').style.display = 'block';
+      setTimeout(() => {
+        document.getElementById('feedback-overlay').style.display = 'none';
+        document.getElementById('feedback-form-view').style.display = '';
+        document.getElementById('feedback-success-view').style.display = 'none';
+      }, 1600);
     } catch(e) {
       alert('Could not submit feedback. Please try again.');
+    } finally {
+      submitBtn.disabled = false;
     }
   });
 
