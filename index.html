@@ -165,25 +165,31 @@
         <span style="font-weight:600;font-size:15px;">💬 Feedback</span>
         <button id="feedback-close" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text-tertiary);">✕</button>
       </div>
-      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:1rem;">Found a bug or have a suggestion? Let us know!</div>
-      <div style="margin-bottom:0.75rem;">
-        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:4px;">Type</label>
-        <select id="feedback-type" style="width:100%;padding:8px;font-size:13px;font-family:inherit;border:1px solid var(--border-strong);border-radius:8px;background:var(--bg-input);color:var(--text-primary);outline:none;">
-          <option value="bug">🐛 Bug Report</option>
-          <option value="feature">✨ Feature Request</option>
-          <option value="other">💬 Other</option>
-        </select>
+      <div id="feedback-form-view">
+        <div style="font-size:13px;color:var(--text-secondary);margin-bottom:1rem;">Found a bug or have a suggestion? Let us know!</div>
+        <div style="margin-bottom:0.75rem;">
+          <label style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:4px;">Type</label>
+          <select id="feedback-type" style="width:100%;padding:8px;font-size:13px;font-family:inherit;border:1px solid var(--border-strong);border-radius:8px;background:var(--bg-input);color:var(--text-primary);outline:none;">
+            <option value="bug">🐛 Bug Report</option>
+            <option value="feature">✨ Feature Request</option>
+            <option value="other">💬 Other</option>
+          </select>
+        </div>
+        <div style="margin-bottom:0.75rem;">
+          <label style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:4px;">Message</label>
+          <textarea id="feedback-text" rows="4" placeholder="Describe the bug or feature you'd like..." style="width:100%;padding:8px;font-size:13px;font-family:inherit;border:1px solid var(--border-strong);border-radius:8px;background:var(--bg-input);color:var(--text-primary);outline:none;resize:vertical;"></textarea>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button id="feedback-cancel" style="flex:1;padding:9px;font-size:13px;font-family:inherit;border:1px solid var(--border-strong);border-radius:8px;background:transparent;color:var(--text-secondary);cursor:pointer;">Cancel</button>
+          <button id="feedback-submit" style="flex:2;padding:9px;font-size:13px;font-family:inherit;border:none;border-radius:8px;background:var(--accent);color:#fff;cursor:pointer;font-weight:600;">Submit</button>
+        </div>
+        <div id="feedback-list" style="margin-top:1rem;"></div>
       </div>
-      <div style="margin-bottom:0.75rem;">
-        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:4px;">Message</label>
-        <textarea id="feedback-text" rows="4" placeholder="Describe the bug or feature you'd like..." style="width:100%;padding:8px;font-size:13px;font-family:inherit;border:1px solid var(--border-strong);border-radius:8px;background:var(--bg-input);color:var(--text-primary);outline:none;resize:vertical;"></textarea>
+      <div id="feedback-success-view" style="display:none;text-align:center;padding:1.5rem 0 0.5rem;">
+        <div style="font-size:32px;margin-bottom:0.5rem;">✅</div>
+        <div style="font-weight:600;font-size:14px;color:var(--text-primary);margin-bottom:4px;">Thanks for your feedback!</div>
+        <div style="font-size:13px;color:var(--text-secondary);">We'll take a look.</div>
       </div>
-      <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:1rem;">Feedback is saved locally on your device.</div>
-      <div style="display:flex;gap:8px;">
-        <button id="feedback-cancel" style="flex:1;padding:9px;font-size:13px;font-family:inherit;border:1px solid var(--border-strong);border-radius:8px;background:transparent;color:var(--text-secondary);cursor:pointer;">Cancel</button>
-        <button id="feedback-submit" style="flex:2;padding:9px;font-size:13px;font-family:inherit;border:none;border-radius:8px;background:var(--accent);color:#fff;cursor:pointer;font-weight:600;">Submit</button>
-      </div>
-      <div id="feedback-list" style="margin-top:1rem;"></div>
     </div>
   </div>
 
@@ -258,8 +264,11 @@
       <p style="font-size:13px;color:var(--text-secondary);margin-bottom:1rem;">
         Your watchlist is saved locally in your browser.
       </p>
-      <input type="text" id="watchlist-search" placeholder="Search watchlist..." autocomplete="off"
-        style="width:100%;padding:10px 14px;font-size:14px;font-family:inherit;border:1px solid var(--border-strong);border-radius:10px;background:var(--bg-input);color:var(--text-primary);outline:none;margin-bottom:1rem;">
+      <div class="search-wrap" style="max-width:none;margin-bottom:1rem;">
+        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="watchlist-search" placeholder="Search watchlist..." autocomplete="off"
+          style="width:100%;padding:10px 14px 10px 44px;font-size:14px;font-family:inherit;border:1px solid var(--border-strong);border-radius:10px;background:var(--bg-input);color:var(--text-primary);outline:none;">
+      </div>
       <div class="pokemon-grid" id="watchlist-grid"></div>
       <div id="watchlist-empty" style="display:none;text-align:center;padding:3rem 1rem;color:var(--text-tertiary);">
         <div style="font-size:40px;margin-bottom:12px;">⭐</div>
