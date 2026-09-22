@@ -832,7 +832,6 @@
             entry.myRatings = Object.assign({}, effective);
           }
           entry.myRatings[fmt] = newTier;
-          entry.ratings[fmt] = newTier;
           entry.useMyRatings = true;
           saveUserDb();
           updateRatingsSrcBtn(entry);
