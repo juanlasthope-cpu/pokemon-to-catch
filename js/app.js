@@ -2006,6 +2006,13 @@ function showImportBtn() {
     await syncWatchlist();
 
     refreshAdminUI();
+
+    // Recompute evolve/LC flags now that community + admin ratings have
+    // actually finished loading (this can finish after or before the
+    // Pokémon list itself, so recheck here regardless of load order)
+    autoSetEvolveFlags();
+    autoSetLCFlags();
+    if (dataLoaded) { renderResults(); renderLegend(); }
   }
 
   loadUserDb();
