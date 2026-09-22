@@ -61,10 +61,10 @@
     if (!userDb[id]) {
       const ratings = {};
       FORMATS.forEach(f => ratings[f] = null);
-      userDb[id] = { ratings, myRatings: null, communityRatings: null, notes: '', evolveWorthy: false, considerCatch: false, useMyRatings: false };
+      userDb[id] = { ratings, myRatings: null, communityRatings: null, notes: '', evolveWorthy: false, considerCatch: false, useMyRatings: globalRatingsMode === 'mine' };
     }
     // Backfill fields for entries created before this feature
-    if (!('useMyRatings' in userDb[id])) userDb[id].useMyRatings = false;
+    if (!('useMyRatings' in userDb[id])) userDb[id].useMyRatings = (globalRatingsMode === 'mine');
     return userDb[id];
   }
 
