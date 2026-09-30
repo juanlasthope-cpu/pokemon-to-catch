@@ -28,6 +28,7 @@
       <button class="admin-bar-btn" id="admin-toggle-btn">🔒 Admin login</button>
       <button class="admin-bar-btn" id="import-ratings-btn" style="display:none;">⬇️ Import ratings</button>
       <button class="admin-bar-btn" id="votes-admin-btn" style="display:none;">🗳️ Votes</button>
+      <button class="admin-bar-btn" id="notes-admin-btn" style="display:none;">📝 Notes</button>
       <button class="admin-bar-btn" id="ratings-mode-btn" style="display:none;">📊 Using: Community</button>
       <button class="admin-bar-btn" id="watchlist-btn">⭐ Watchlist</button>
       <button class="admin-bar-btn" id="filter-btn">🔍 Filter</button>
@@ -112,6 +113,17 @@
         <h2 style="font-size:20px;font-weight:600;">🗳️ Community Votes</h2>
       </div>
       <div id="votes-admin-content"></div>
+    </div>
+  </div>
+
+  <!-- ── NOTE SUGGESTIONS ADMIN VIEW ── -->
+  <div id="notes-admin-view" style="display:none;position:fixed;inset:0;background:var(--bg-page);z-index:150;overflow-y:auto;">
+    <div class="container" style="padding-top:2rem;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.5rem;">
+        <button id="notes-admin-back" class="back-btn" style="position:static;">← Back</button>
+        <h2 style="font-size:20px;font-weight:600;">📝 Note Suggestions</h2>
+      </div>
+      <div id="notes-admin-content"></div>
     </div>
   </div>
 
@@ -307,6 +319,6 @@
   <!-- Supabase integration -->
   <script src="js/supabase.js?v=2"></script>
   <!-- App logic -->
-  <script src="js/app.js?v=4"></script>
+  <script src="js/app.js?v=5"></script>
 </body>
 </html>
