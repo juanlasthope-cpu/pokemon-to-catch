@@ -1672,7 +1672,7 @@ function showImportBtn() {
   /* ── Votes Admin page ─────────────────────────────────────────── */
   function renderVotesAdminPage() {
     const content = document.getElementById('votes-admin-content');
-    const votes   = loadVotes();
+    const votes   = getVotesCache();
     const active  = Object.entries(votes).filter(([,v]) =>
       v.status === 'suggestion' || v.status === 'open' || v.status === 'pending'
     );
@@ -1725,7 +1725,7 @@ function showImportBtn() {
     // Wire admin actions
     content.querySelectorAll('[data-vadmin]').forEach(btn => {
       btn.addEventListener('click', async () => {
-        const votes  = loadVotes();
+        const votes  = getVotesCache();
         const key    = btn.dataset.key;
         const action = btn.dataset.vadmin;
         const vote   = votes[key];
@@ -1758,7 +1758,7 @@ function showImportBtn() {
   }
 
   /* ── Vote Modal ── */
-  function openVoteModal(pokemonId, pokemonName) {
+  async function openVoteModal(pokemonId, pokemonName) {
     const modal = document.getElementById('vote-modal');
     const content = document.getElementById('vote-modal-content');
     document.getElementById('vote-modal-title').textContent = '💬 Suggest a Rating Change — ' + pokemonName;
@@ -1768,8 +1768,12 @@ function showImportBtn() {
       ${TIER_GUIDELINES.map(g => `<span style="font-weight:600">${g.tier}</span> — ${g.desc}`).join('<br>')}
     </div>`;
 
+    // Refresh the votes cache so this modal reflects what's actually in
+    // Supabase right now (other visitors may have voted since page load)
+    await loadVotes();
+
     // Check existing votes for this pokemon
-    const votes = loadVotes();
+    const votes = getVotesCache();
     const fmtStatuses = FORMATS.map(fmt => {
       const key  = getVoteKey(pokemonId, fmt);
       const vote = votes[key];
@@ -1781,7 +1785,7 @@ function showImportBtn() {
     const voterId = getVoterId();
 
     function renderModalContent() {
-      const votes = loadVotes();
+      const votes = getVotesCache();
       content.innerHTML = guidelinesHtml +
         '<div style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Select a format</div>' +
         fmtStatuses.map(({ fmt, currentTier }) => {
@@ -1828,7 +1832,7 @@ function showImportBtn() {
         btn.addEventListener('click', async () => {
           const action  = btn.dataset.action;
           const voterId = getVoterId();
-          const votes   = loadVotes();
+          const votes   = getVotesCache();
 
           if (action === 'suggest') {
             const fmt  = btn.dataset.fmt;
@@ -1842,20 +1846,24 @@ function showImportBtn() {
             } catch(e) { console.error('Create vote:', e); }
             return;
           } else if (action === 'upvote') {
-            const voteId = btn.dataset.voteid;
-            const upvoteCount = parseInt(btn.dataset.upvotecount || '0');
+            const key  = btn.dataset.key;
+            const vote = votes[key];
+            if (!vote) return;
+            const upvoteCount = Object.keys(vote.upvotes||{}).length;
             try {
-              await SB.upvoteVote(voteId, voterId, upvoteCount);
+              await SB.upvoteVote(vote.id, voterId, upvoteCount);
               await loadVotes();
               renderModalContent();
             } catch(e) { console.error('Upvote:', e); }
             return;
           } else if (action === 'cast') {
-            const voteId = btn.dataset.voteid;
-            const tier   = btn.dataset.tier;
-            const total  = parseInt(btn.dataset.total || '0');
+            const key  = btn.dataset.key;
+            const tier = btn.dataset.tier;
+            const vote = votes[key];
+            if (!vote) return;
+            const total = Object.values(vote.votes||{}).reduce((s,v)=>s+Object.keys(v).length,0);
             try {
-              await SB.castVote(voteId, voterId, tier, total);
+              await SB.castVote(vote.id, voterId, tier, total);
               await loadVotes();
               renderModalContent();
             } catch(e) { console.error('Cast vote:', e); }
@@ -1946,8 +1954,9 @@ function showImportBtn() {
       document.getElementById('vote-modal').style.display = 'none';
   });
 
-  document.getElementById('votes-admin-btn').addEventListener('click', () => {
+  document.getElementById('votes-admin-btn').addEventListener('click', async () => {
     if (!Auth.isLoggedIn()) return;
+    await loadVotes();
     renderVotesAdminPage();
     document.getElementById('votes-admin-view').style.display = 'block';
     window.scrollTo(0,0);
