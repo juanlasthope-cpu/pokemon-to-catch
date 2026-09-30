@@ -1505,7 +1505,7 @@ function showImportBtn() {
   function getVoteKey(pokemonId, format) { return pokemonId + '__' + format; }
 
   function isExpired(vote) {
-    return (Date.now() - vote.created) > VOTE_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
+    return (Date.now() - new Date(vote.created_at).getTime()) > VOTE_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
   }
 
   function getActiveVote(pokemonId, format) {
@@ -1692,7 +1692,7 @@ function showImportBtn() {
         return c > (best.count||0) ? {tier:t,count:c} : best;
       }, {tier:'—',count:0});
       const upvotes    = Object.keys(vote.upvotes||{}).length;
-      const daysOld    = Math.floor((Date.now()-vote.created)/86400000);
+      const daysOld    = Math.floor((Date.now() - new Date(vote.created_at).getTime())/86400000);
       const statusBadge = {
         suggestion:`<span style="background:#fff3cd;color:#856404;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;">SUGGESTION</span>`,
         open:`<span style="background:#d1ecf1;color:#0c5460;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;">OPEN</span>`,
@@ -1702,11 +1702,11 @@ function showImportBtn() {
       return `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:1rem;">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
           <div>
-            <span style="font-weight:600;">${vote.pokemonName}</span>
+            <span style="font-weight:600;">${vote.pokemon_name}</span>
             <span style="color:var(--text-tertiary);margin:0 6px;">·</span>
             <span style="color:var(--text-secondary);">${vote.format}</span>
             <span style="color:var(--text-tertiary);margin:0 6px;">·</span>
-            <span style="color:var(--text-secondary);">Current: <strong>${vote.currentTier||'U'}</strong></span>
+            <span style="color:var(--text-secondary);">Current: <strong>${vote.current_tier||'U'}</strong></span>
           </div>
           ${statusBadge}
         </div>
@@ -1796,7 +1796,7 @@ function showImportBtn() {
           let actionBtn  = '';
 
           if (!vote || expired) {
-            actionBtn = `<button class="vote-suggest-btn" data-action="suggest" data-fmt="${fmt}" data-id="${pokemonId}" data-name="${pokemonName}" data-tier="${currentTier}">Suggest</button>`;
+            actionBtn = `<button class="vote-suggest-btn" data-action="suggest" data-fmt="${fmt}" data-id="${pokemonId}" data-name="${pokemonName}" data-tier="${currentTier}">Suggest Vote</button>`;
           } else if (vote.status === 'suggestion') {
             const upvoteCount = Object.keys(vote.upvotes||{}).length;
             const hasUpvoted  = voterId in (vote.upvotes||{});
@@ -1807,7 +1807,7 @@ function showImportBtn() {
           } else if (vote.status === 'open') {
             const totalVotes = Object.values(vote.votes||{}).reduce((s,v)=>s+Object.keys(v).length,0);
             const myVote     = SELECTABLE_TIERS.find(t => voterId in (vote.votes?.[t]||{}));
-            const daysLeft   = Math.max(0,Math.ceil((VOTE_EXPIRY_DAYS*86400000-(Date.now()-vote.created))/86400000));
+            const daysLeft   = Math.max(0,Math.ceil((VOTE_EXPIRY_DAYS*86400000-(Date.now() - new Date(vote.created_at).getTime()))/86400000));
             statusText = `🗳️ ${totalVotes}/${VOTE_CLOSE_THRESHOLD} · ${daysLeft}d left`;
             const castBtns = SELECTABLE_TIERS.map(t =>
               `<button class="vote-cast-btn ${myVote===t?'voted':''}" data-action="cast" data-key="${key}" data-tier="${t}">${t}</button>`
