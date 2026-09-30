@@ -122,6 +122,8 @@
     if (modeBtn) modeBtn.style.display = loggedIn ? '' : 'none';
     const votesBtn = document.getElementById('votes-admin-btn');
     if (votesBtn) votesBtn.style.display = loggedIn ? '' : 'none';
+    const notesAdminBtn = document.getElementById('notes-admin-btn');
+    if (notesAdminBtn) notesAdminBtn.style.display = loggedIn ? '' : 'none';
 
     // Detail page edit section & readonly notice (only matters if detail is open)
     if (currentId) {
@@ -1757,6 +1759,67 @@ function showImportBtn() {
     });
   }
 
+  /* ── Note Suggestions Admin page ──────────────────────────────── */
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str == null ? '' : String(str);
+    return div.innerHTML;
+  }
+
+  async function renderNotesAdminPage() {
+    const content = document.getElementById('notes-admin-content');
+    content.innerHTML = '<p style="color:var(--text-tertiary);text-align:center;padding:3rem;">Loading…</p>';
+
+    let suggestions;
+    try {
+      suggestions = await SB.loadNoteSuggestions();
+    } catch(e) {
+      console.error('loadNoteSuggestions:', e);
+      content.innerHTML = '<p style="color:var(--text-tertiary);text-align:center;padding:3rem;">Could not load note suggestions.</p>';
+      return;
+    }
+
+    if (!suggestions.length) {
+      content.innerHTML = '<p style="color:var(--text-tertiary);text-align:center;padding:3rem;">No pending note suggestions.</p>';
+      return;
+    }
+
+    suggestions.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+
+    content.innerHTML = suggestions.map(s => {
+      const daysOld = Math.floor((Date.now() - new Date(s.created_at).getTime())/86400000);
+      return `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:1rem;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
+          <span style="font-weight:600;">${escapeHtml(s.pokemon_name)}</span>
+          <span style="font-size:11px;color:var(--text-tertiary);">${daysOld}d old</span>
+        </div>
+        <div style="font-size:13px;color:var(--text-secondary);margin-top:8px;white-space:pre-wrap;">${escapeHtml(s.content)}</div>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button class="admin-bar-btn" data-nadmin="accept" data-id="${s.id}" style="font-size:12px;padding:5px 12px;background:var(--accent);color:#fff;">✓ Accept</button>
+          <button class="admin-bar-btn" data-nadmin="reject" data-id="${s.id}" style="font-size:12px;padding:5px 12px;">✗ Reject</button>
+        </div>
+      </div>`;
+    }).join('');
+
+    content.querySelectorAll('[data-nadmin]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id     = btn.dataset.id;
+        const action = btn.dataset.nadmin;
+        const suggestion = suggestions.find(s => String(s.id) === String(id));
+        if (!suggestion) return;
+
+        try {
+          if (action === 'accept') {
+            await SB.acceptNoteSuggestion(id, suggestion.pokemon_id, suggestion.content);
+          } else if (action === 'reject') {
+            await SB.rejectNoteSuggestion(id);
+          }
+          renderNotesAdminPage();
+        } catch(e) { console.error('Admin note action:', e); }
+      });
+    });
+  }
+
   /* ── Vote Modal ── */
   async function openVoteModal(pokemonId, pokemonName) {
     const modal = document.getElementById('vote-modal');
@@ -1963,6 +2026,18 @@ function showImportBtn() {
   });
   document.getElementById('votes-admin-back').addEventListener('click', () => {
     document.getElementById('votes-admin-view').style.display = 'none';
+    document.getElementById('home-view').classList.add('active');
+    if (dataLoaded) renderResults();
+  });
+
+  document.getElementById('notes-admin-btn').addEventListener('click', async () => {
+    if (!Auth.isLoggedIn()) return;
+    renderNotesAdminPage();
+    document.getElementById('notes-admin-view').style.display = 'block';
+    window.scrollTo(0,0);
+  });
+  document.getElementById('notes-admin-back').addEventListener('click', () => {
+    document.getElementById('notes-admin-view').style.display = 'none';
     document.getElementById('home-view').classList.add('active');
     if (dataLoaded) renderResults();
   });
